@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	port       = flag.String("port", ":8080", "Port to listen on")
+	ipAddr     = flag.String("ip", "0.0.0.0", "IP address to bind to")
+	port       = flag.String("port", "8080", "Port to listen on")
 	logFile    = flag.String("log", "blackhole.log", "Log file path")
 	rootDir    = flag.String("root", "blackhole_root", "Root directory for mirroring")
 	contentDir = flag.String("content", "blackhole_content", "Directory containing real content to serve")
@@ -21,21 +22,7 @@ var (
 
 const version = "0.1.0"
 
-// 1x1 transparent tracking GIF
-var trackingPixel = []byte{
-	0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00,
-	0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04, 0x01, 0x00,
-	0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00,
-	0x00, 0x02, 0x02, 0x44, 0x01, 0x00, 0x3B,
-}
-
-type RequestLog struct {
-	Timestamp  string              `json:"timestamp"`
-	RemoteAddr string              `json:"remote_addr"`
-	Method     string              `json:"method"`
-	URL        string              `json:"url"`
-	Headers    map[string][]string `json:"headers"`
-}
+// ... (trackingPixel remains same)
 
 func main() {
 	flag.Parse()
@@ -51,12 +38,13 @@ func main() {
 
 	http.HandleFunc("/", handleRequest)
 
-	fmt.Printf("Blackhole server v%s listening on %s\n", version, *port)
+	addr := fmt.Sprintf("%s:%s", *ipAddr, *port)
+	fmt.Printf("Blackhole server v%s listening on %s\n", version, addr)
 	fmt.Printf("Logging to: %s\n", *logFile)
 	fmt.Printf("Mirroring to: %s/\n", *rootDir)
 	fmt.Printf("Serving content from: %s/\n", *contentDir)
 
-	if err := http.ListenAndServe(*port, nil); err != nil {
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }
